@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TimeApp.Models;
+using TimeApp.ViewModels;
 
 namespace TimeApp.Controllers
 {
@@ -44,14 +45,11 @@ namespace TimeApp.Controllers
         // PUT: api/Categories/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCategory(int id, Category category)
+        public async Task<string> PutCategory(int id, CategoryViewModel category)
         {
-            if (id != category.Id)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(category).State = EntityState.Modified;
+            Category inputCategory = _context.Categories.FindAsync(id).Result;
+            inputCategory.Name = category.Name;
+            _context.Entry(inputCategory).State = EntityState.Modified;
 
             try
             {
@@ -61,7 +59,7 @@ namespace TimeApp.Controllers
             {
                 if (!CategoryExists(id))
                 {
-                    return NotFound();
+                    return "Can't add the category.";
                 }
                 else
                 {
@@ -69,34 +67,35 @@ namespace TimeApp.Controllers
                 }
             }
 
-            return NoContent();
+            return inputCategory.Name+" is changed!";
         }
 
         // POST: api/Categories
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Category>> PostCategory(Category category)
+        public async Task<ActionResult<string>> PostCategory(CategoryViewModel category)
         {
-            _context.Categories.Add(category);
+            Category newCategory = new Category() {Name = category.Name };
+            _context.Categories.Add(newCategory);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCategory", new { id = category.Id }, category);
+            return category.Name + " is added ";
         }
 
         // DELETE: api/Categories/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteCategory(int id)
+        public async Task<string> DeleteCategory(int id)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
             {
-                return NotFound();
+                return $"Cant delete {category.Name}.";
             }
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return category.Name+" was deleted.";
         }
 
         private bool CategoryExists(int id)
